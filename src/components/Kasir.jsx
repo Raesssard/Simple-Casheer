@@ -7,7 +7,11 @@ class Kasir extends Component {
     items: [],
     newItem: '',
     newPrice: '',
-    transactions: []
+    newCategory: '',
+    isCustomCategory: false,
+    transactions: [],
+    searchTerm: '',
+    selectedCategory: ''
   };
 
   componentDidMount() {
@@ -29,6 +33,7 @@ class Kasir extends Component {
         JSON.stringify(this.state.items.map(item => ({
           name: item.name,
           price: item.price,
+          category: item.category || '',
           checked: item.checked
         })))
       );
@@ -55,18 +60,21 @@ class Kasir extends Component {
   };
 
   handleAddItem = () => {
-    const { newItem, newPrice, items } = this.state;
+    const { newItem, newPrice, newCategory, items } = this.state;
     if (newItem.trim() && newPrice.trim()) {
       const newProduct = {
         name: newItem,
         price: parseInt(newPrice),
+        category: newCategory || '',
         qty: 0,
         checked: false
       };
       this.setState({
         items: [...items, newProduct],
         newItem: '',
-        newPrice: ''
+        newPrice: '',
+        newCategory: '',
+        isCustomCategory: false
       });
     }
   };
@@ -141,16 +149,51 @@ class Kasir extends Component {
   };
 
   render() {
-    const { items, newItem, newPrice, transactions } = this.state;
+    const { items, newItem, newPrice, newCategory, isCustomCategory, transactions, searchTerm, selectedCategory } = this.state;
+
+    // Ambil daftar kategori unik
+    const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
+
+    // Filter produk
+    const filteredItems = items.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedCategory === '' || item.category === selectedCategory)
+    );
 
     return (
       <div className="container mt-4">
-        <div className="card shadow-sm p-4 bg-white rounded">
+        {/* Card Utama */}
+        <div className="card shadow-sm p-4 rounded">
           <h3 className="text-center mb-4">🧾 Kasir React JS</h3>
+
+          {/* Filter & Search */}
+          <div className="row mb-3">
+            <div className="col-sm-6 mb-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Cari produk..."
+                value={searchTerm}
+                onChange={(e) => this.setState({ searchTerm: e.target.value })}
+              />
+            </div>
+            <div className="col-sm-6 mb-2">
+              <select
+                className="form-select"
+                value={selectedCategory}
+                onChange={(e) => this.setState({ selectedCategory: e.target.value })}
+              >
+                <option value="">Semua Kategori</option>
+                {categories.map((cat, i) => (
+                  <option key={i} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Tambah Produk */}
           <div className="row mb-3">
-            <div className="col-sm-5 mb-2">
+            <div className="col-sm-4 mb-2">
               <input
                 type="text"
                 className="form-control"
@@ -170,37 +213,68 @@ class Kasir extends Component {
                 onChange={this.handleInputChange}
               />
             </div>
-            <div className="col-sm-4 mb-2">
+            <div className="col-sm-3 mb-2">
+              {isCustomCategory ? (
+                <input
+                  type="text"
+                  className="form-control"
+                  name="newCategory"
+                  placeholder="Kategori baru"
+                  value={newCategory}
+                  onChange={this.handleInputChange}
+                />
+              ) : (
+                <select
+                  className="form-select"
+                  value={newCategory}
+                  onChange={(e) => {
+                    if (e.target.value === "__new") {
+                      this.setState({ isCustomCategory: true, newCategory: '' });
+                    } else {
+                      this.setState({ newCategory: e.target.value });
+                    }
+                  }}
+                >
+                  <option value="">Pilih kategori</option>
+                  {categories.map((cat, i) => (
+                    <option key={i} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__new">+ Tambah kategori baru</option>
+                </select>
+              )}
+            </div>
+            <div className="col-sm-2 mb-2">
               <button className="btn btn-primary w-100" onClick={this.handleAddItem}>
-                Tambah Produk
+                Tambah
               </button>
             </div>
           </div>
 
           {/* Daftar Produk */}
           <ul className="list-group mb-3">
-            {items.length === 0 && <p className="text-muted">Belum ada produk.</p>}
-            {items.map((item, index) => (
+            {filteredItems.length === 0 && <p className="text-muted">Tidak ada produk yang cocok.</p>}
+            {filteredItems.map((item, index) => (
               <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center flex-wrap">
                   <input
                     type="checkbox"
                     className="form-check-input me-2"
                     checked={item.checked}
-                    onChange={() => this.handleCheckbox(index)}
+                    onChange={() => this.handleCheckbox(items.indexOf(item))}
                   />
                   <strong className="me-2">{item.name}</strong>
+                  {item.category && <span className="badge bg-info me-2">{item.category}</span>}
                   <span className="badge bg-secondary me-2">Rp {item.price.toLocaleString()}</span>
                 </div>
                 <div className="d-flex align-items-center">
                   {item.checked && (
                     <div className="me-2">
-                      <button className="btn btn-sm btn-outline-danger me-1" onClick={() => this.handleQtyChange(index, -1)}>-</button>
+                      <button className="btn btn-sm btn-outline-danger me-1" onClick={() => this.handleQtyChange(items.indexOf(item), -1)}>-</button>
                       <span>{item.qty}</span>
-                      <button className="btn btn-sm btn-outline-success ms-1" onClick={() => this.handleQtyChange(index, 1)}>+</button>
+                      <button className="btn btn-sm btn-outline-success ms-1" onClick={() => this.handleQtyChange(items.indexOf(item), 1)}>+</button>
                     </div>
                   )}
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => this.handleDeleteItem(index)}>Hapus</button>
+                  <button className="btn btn-sm btn-outline-danger" onClick={() => this.handleDeleteItem(items.indexOf(item))}>Hapus</button>
                 </div>
               </li>
             ))}
@@ -218,9 +292,9 @@ class Kasir extends Component {
         </div>
 
         {/* Riwayat Transaksi */}
-        <div className="card shadow-sm p-4 mt-4 bg-white rounded">
+        <div className="card shadow-sm p-4 mt-4 rounded">
           <h5 className="mb-3">🗃️ Riwayat Transaksi</h5>
-          {transactions.length === 0 && <p className="text-muted">Belum ada transaksi.</p>}
+          {transactions.length === 0 && <p className="text-muted text-white">Belum ada transaksi.</p>}
           <ul className="list-group">
             {transactions.map(trx => (
               <li key={trx.id} className="list-group-item d-flex justify-content-between align-items-center flex-wrap">
