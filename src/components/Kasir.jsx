@@ -1,4 +1,3 @@
-// ...existing import...
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProductForm from './ProductForm';
@@ -32,7 +31,7 @@ class Kasir extends Component {
     const savedItems = loadItems();
     const savedTransactions = loadTransactions();
 
-    // Generate categories from items
+    // Inisialisasi categories dari produk yang ada (boleh tetap ada)
     const categories = [
       ...new Set(savedItems.map(item => item.category).filter(Boolean))
     ];
@@ -52,13 +51,7 @@ class Kasir extends Component {
   componentDidUpdate(_, prevState) {
     if (prevState.items !== this.state.items) {
       saveItems(this.state.items);
-      // Sync categories setiap kali items berubah
-      const categories = [
-        ...new Set(this.state.items.map(item => item.category).filter(Boolean))
-      ];
-      if (JSON.stringify(categories) !== JSON.stringify(this.state.categories)) {
-        this.setState({ categories });
-      }
+      // HAPUS kode sync categories otomatis di sini!
     }
     if (prevState.transactions !== this.state.transactions) saveTransactions(this.state.transactions);
   }
@@ -210,7 +203,7 @@ class Kasir extends Component {
     else if (sortOption === 'category-desc') filtered.sort((a, b) => (b.category || '').localeCompare(a.category || ''));
 
     return (
-      <div>
+      <div style={{ marginTop: '2.5rem' }}>
         <div className="card shadow-sm p-4 rounded">
           <h3 className="text-center mb-4">🧾 Kasir React JS</h3>
 
