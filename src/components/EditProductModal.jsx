@@ -5,24 +5,23 @@ export default function EditProductModal({
   name,
   price,
   category,
-  categories,      // optional: array kategori dari parent
+  categories,
   onClose,
   onSave,
-  onChange         // parent handler: (e) => this.setState({ [e.target.name]: e.target.value })
+  onChange
 }) {
   const [selectedCategory, setSelectedCategory] = useState(category || '');
   const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
-    // sync when modal opens / parent changes category
-    setSelectedCategory(category || '');
-    setNewCategory('');
-  }, [category, visible]);
+    if (visible) {
+      setSelectedCategory(category || '');
+      setNewCategory('');
+    }
+  }, [visible, category]);
 
   if (!visible) return null;
 
-  // buat daftar opsi: pakai categories, tapi jika produk punya kategori yg belum ada,
-  // tambahkan sementara supaya select tetap menampilkan nilai produk
   const categoryOptions = Array.isArray(categories) && categories.length
     ? (() => {
         const set = new Set(categories.map(c => (c || '').trim()).filter(Boolean));
@@ -33,35 +32,30 @@ export default function EditProductModal({
 
   const handleCategorySelect = (val) => {
     setSelectedCategory(val);
-    // jika pilih kategori existing, langsung sinkronkan ke parent (so parent.editCategory tetap up to date)
     if (val !== '__new' && onChange) {
       onChange({ target: { name: 'editCategory', value: val } });
     }
-    // kalau tidak pilih __new, bersihkan input kategori baru
     if (val !== '__new') setNewCategory('');
   };
 
-const handleSave = () => {
-  let finalCat = selectedCategory;
+  const handleNewCategoryChange = (e) => {
+    setNewCategory(e.target.value);
+    // Jangan panggil onChange ke parent di sini!
+  };
 
-  // Jika user memilih tambah kategori baru
-  if (selectedCategory === '__new') {
-    finalCat = (newCategory || '').trim();
-    if (!finalCat) {
-      alert('Masukkan nama kategori baru atau pilih kategori existing.');
-      return;
+  const handleSave = () => {
+    let finalCat = selectedCategory;
+
+    if (selectedCategory === '__new') {
+      finalCat = (newCategory || '').trim();
+      if (!finalCat) {
+        alert('Masukkan nama kategori baru atau pilih kategori existing.');
+        return;
+      }
     }
-  }
 
-  // Pastikan kategori dikirim ke parent
-  if (onChange) {
-    onChange({ target: { name: 'editCategory', value: finalCat } });
-  }
-
-  // Simpan
-  if (onSave) onSave();
-};
-    
+    if (onSave) onSave(finalCat); // Kirim kategori yang benar ke parent
+  };
 
   return (
     <div style={styles.overlay}>
@@ -108,12 +102,12 @@ const handleSave = () => {
                   className="form-control mb-2"
                   placeholder="Masukkan kategori baru"
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                  onChange={handleNewCategoryChange}
+                  autoFocus
                 />
               )}
             </>
           ) : (
-            // fallback: jika parent tidak kirim categories, tetap input teks
             <input
               type="text"
               className="form-control mb-2"
@@ -134,7 +128,6 @@ const handleSave = () => {
   );
 }
 
-/* light-mode styles for modal */
 const styles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

@@ -1,3 +1,4 @@
+// ...existing import...
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProductForm from './ProductForm';
@@ -8,10 +9,9 @@ import { loadItems, saveItems, loadTransactions, saveTransactions } from '../uti
 import { formatRp } from '../utils/formatCurrency';
 
 class Kasir extends Component {
-// 🛠 State awal
   state = {
     items: [],
-    categories: [], // ✅ Tambahkan supaya categories selalu ada sejak awal
+    categories: [],
     newItem: '',
     newPrice: '',
     newCategory: '',
@@ -32,6 +32,11 @@ class Kasir extends Component {
     const savedItems = loadItems();
     const savedTransactions = loadTransactions();
 
+    // Generate categories from items
+    const categories = [
+      ...new Set(savedItems.map(item => item.category).filter(Boolean))
+    ];
+
     const restored = savedItems.map(item => ({
       id: item.id || (Date.now() + Math.floor(Math.random() * 1000)),
       name: item.name,
@@ -41,11 +46,20 @@ class Kasir extends Component {
       qty: typeof item.qty === 'number' ? item.qty : (item.checked ? 1 : 0)
     }));
 
-    this.setState({ items: restored, transactions: savedTransactions });
+    this.setState({ items: restored, transactions: savedTransactions, categories });
   }
 
   componentDidUpdate(_, prevState) {
-    if (prevState.items !== this.state.items) saveItems(this.state.items);
+    if (prevState.items !== this.state.items) {
+      saveItems(this.state.items);
+      // Sync categories setiap kali items berubah
+      const categories = [
+        ...new Set(this.state.items.map(item => item.category).filter(Boolean))
+      ];
+      if (JSON.stringify(categories) !== JSON.stringify(this.state.categories)) {
+        this.setState({ categories });
+      }
+    }
     if (prevState.transactions !== this.state.transactions) saveTransactions(this.state.transactions);
   }
 
@@ -71,8 +85,9 @@ class Kasir extends Component {
   };
 
   handleAddItem = () => {
-    const { newItem, newPrice, newCategory, items } = this.state;
+    const { newItem, newPrice, newCategory, items, categories } = this.state;
     if (!newItem.trim() || newPrice.toString().trim() === '') return;
+
     const newProduct = {
       id: Date.now() + Math.floor(Math.random() * 1000),
       name: newItem,
@@ -81,8 +96,15 @@ class Kasir extends Component {
       qty: 0,
       checked: false
     };
+
+    let updatedCategories = [...categories];
+    if (newCategory && !updatedCategories.includes(newCategory)) {
+      updatedCategories.push(newCategory);
+    }
+
     this.setState({
       items: [...items, newProduct],
+      categories: updatedCategories,
       newItem: '',
       newPrice: '',
       newCategory: '',
@@ -96,7 +118,6 @@ class Kasir extends Component {
     this.setState({ items });
   };
 
-  // edit modal
   openEditModal = (id) => {
     const idx = this.findIndexById(id);
     if (idx === -1) return;
@@ -114,39 +135,38 @@ class Kasir extends Component {
     this.setState({ showEditModal: false, editId: null, editName: '', editPrice: '', editCategory: '' });
   };
 
-handleEditSave = () => {
-  const { editId, editName, editPrice, editCategory, categories } = this.state;
+  handleEditSave = (newCategoryValue) => {
+    const { editId, editName, editPrice, categories } = this.state;
+    const editCategory = newCategoryValue !== undefined ? newCategoryValue : this.state.editCategory;
 
-  if (!editName.trim() || !editPrice || !editCategory.trim()) {
-    alert("Nama, harga, dan kategori harus diisi.");
-    return;
-  }
+    if (!editName.trim() || !editPrice || !editCategory.trim()) {
+      alert("Nama, harga, dan kategori harus diisi.");
+      return;
+    }
 
-  const items = [...this.state.items];
-  const idx = this.findIndexById(editId);
-  if (idx === -1) return;
+    const items = [...this.state.items];
+    const idx = this.findIndexById(editId);
+    if (idx === -1) return;
 
-  // Update produk
-  items[idx] = {
-    ...items[idx],
-    name: editName.trim(),
-    price: parseInt(editPrice),
-    category: editCategory.trim()
+    // Update produk
+    items[idx] = {
+      ...items[idx],
+      name: editName.trim(),
+      price: parseInt(editPrice),
+      category: editCategory.trim()
+    };
+
+    // Tambahkan kategori baru ke daftar kalau belum ada
+    let updatedCategories = [...categories];
+    if (editCategory.trim() && !updatedCategories.includes(editCategory.trim())) {
+      updatedCategories.push(editCategory.trim());
+    }
+
+    this.setState(
+      { items, categories: updatedCategories },
+      this.closeEditModal
+    );
   };
-
-  // Tambahkan kategori baru ke daftar kalau belum ada
-  let updatedCategories = [...categories];
-  if (!updatedCategories.includes(editCategory.trim())) {
-    updatedCategories.push(editCategory.trim());
-  }
-
-  this.setState(
-    { items, categories: updatedCategories },
-    this.closeEditModal
-  );
-};
-
-
 
   handleInputChange = (e) => {
     this.setState({ [e.target.name]: e.target.value });
@@ -174,10 +194,8 @@ handleEditSave = () => {
     const {
       items, newItem, newPrice, newCategory, isCustomCategory,
       transactions, searchTerm, selectedCategory, sortOption,
-      showEditModal, editName, editPrice, editCategory
+      showEditModal, editName, editPrice, editCategory, categories
     } = this.state;
-
-    const categories = [...new Set(items.map(i => (i.category || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
     // filter
     let filtered = items.filter(item =>
@@ -220,7 +238,6 @@ handleEditSave = () => {
             </div>
           </div>
 
-          {/* Add form (inline) using ProductForm component */}
           <ProductForm
             newItem={newItem}
             newPrice={newPrice}
@@ -232,7 +249,6 @@ handleEditSave = () => {
             onToggleCustom={(v) => this.setState({ isCustomCategory: v })}
           />
 
-          {/* Product list */}
           <ProductList
             items={filtered}
             onCheckbox={this.handleCheckbox}
@@ -241,7 +257,6 @@ handleEditSave = () => {
             onDelete={this.handleDeleteItem}
           />
 
-          {/* Total & Save */}
           <div className="d-flex justify-content-between align-items-center mb-0">
             <button className="btn btn-warning btn-sm" onClick={this.resetAllCheckboxes}>Reset Checkbox</button>
             <h5>Total: <span className="badge bg-success">{formatRp(this.calculateTotal())}</span></h5>
@@ -249,21 +264,18 @@ handleEditSave = () => {
           </div>
         </div>
 
-        {/* Transaction history */}
         <TransactionHistory transactions={transactions} onDelete={this.handleDeleteTransaction} />
 
-        {/* Edit Modal */}
         <EditProductModal
           visible={showEditModal}
           name={editName}
           price={editPrice}
           category={editCategory}
-          categories={categories}   // ← penting
+          categories={categories}
           onClose={this.closeEditModal}
           onSave={this.handleEditSave}
           onChange={(e) => this.setState({ [e.target.name]: e.target.value })}
         />
-
       </div>
     );
   }
