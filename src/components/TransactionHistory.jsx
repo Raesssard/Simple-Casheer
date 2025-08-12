@@ -15,7 +15,10 @@ export default function TransactionHistory({ transactions, onDelete }) {
   };
 
   return (
-    <div className="card shadow-sm p-4 mt-4 rounded">
+    <div
+      className="card shadow-sm p-4 mt-4 rounded mx-auto"
+      style={{ maxWidth: 1000, width: '100%' }}
+    >
       <h5 className="mb-3">🗃️ Riwayat Transaksi</h5>
       {transactions.length === 0 && <p className="text-muted">Belum ada transaksi.</p>}
       <ul className="list-group">

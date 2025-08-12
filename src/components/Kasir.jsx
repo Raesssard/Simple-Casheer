@@ -207,7 +207,7 @@ class Kasir extends Component {
         <div
           className="card shadow-sm p-4 rounded mx-auto"
           style={{
-            maxWidth: 900, // lebih lebar di desktop
+            maxWidth: 1000, // lebih lebar di desktop
             width: '100%',
           }}
         >
