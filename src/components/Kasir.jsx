@@ -258,9 +258,21 @@ class Kasir extends Component {
 
           {/* Tombol bawah responsif */}
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-0 gap-2 mt-3">
-            <button className="btn btn-warning btn-sm w-100 w-sm-auto" onClick={this.resetAllCheckboxes}>Reset Checkbox</button>
+            <button
+              className="btn btn-warning btn-sm w-100 w-sm-auto"
+              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+              onClick={this.resetAllCheckboxes}
+            >
+              Reset Checkbox
+            </button>
             <h5 className="my-2 my-sm-0">Total: <span className="badge bg-success">{formatRp(this.calculateTotal())}</span></h5>
-            <button className="btn btn-success btn-sm w-100 w-sm-auto" onClick={this.handleSaveTransaction}>Simpan Transaksi</button>
+            <button
+              className="btn btn-success btn-sm w-100 w-sm-auto"
+              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+              onClick={this.handleSaveTransaction}
+            >
+              Simpan Transaksi
+            </button>
           </div>
         </div>
 

@@ -65,9 +65,9 @@ body {
   border-color: #0a58ca;
 }
 
-.badge {
-  font-size: 0.8rem;
-  padding: 0.4em 0.6em;
+.btn-sm {
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.5rem !important;
 }
 
 /* Responsif untuk Mobile */
@@ -83,6 +83,11 @@ body {
 
   .badge {
     font-size: 0.7rem;
+  }
+
+  .btn-sm {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
   }
 }
 
