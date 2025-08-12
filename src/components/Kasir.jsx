@@ -203,22 +203,28 @@ class Kasir extends Component {
     else if (sortOption === 'category-desc') filtered.sort((a, b) => (b.category || '').localeCompare(a.category || ''));
 
     return (
-      <div style={{ marginTop: '2.5rem' }}>
-        <div className="card shadow-sm p-4 rounded">
+      <div className="container" style={{ marginTop: '2.5rem' }}>
+        <div
+          className="card shadow-sm p-4 rounded mx-auto"
+          style={{
+            maxWidth: 900, // lebih lebar di desktop
+            width: '100%',
+          }}
+        >
           <h3 className="text-center mb-4">🧾 Kasir React JS</h3>
 
           {/* Filter / Search / Sort */}
           <div className="row g-2 mb-3">
-            <div className="col-sm-4">
+            <div className="col-12 col-sm-4 mb-2 mb-sm-0">
               <input className="form-control" placeholder="Cari produk..." value={searchTerm} name="searchTerm" onChange={this.handleInputChange} />
             </div>
-            <div className="col-sm-3">
+            <div className="col-12 col-sm-3 mb-2 mb-sm-0">
               <select className="form-select" name="selectedCategory" value={selectedCategory} onChange={this.handleInputChange}>
                 <option value="">Semua Kategori</option>
                 {categories.map((c, i) => <option key={i} value={c}>{c}</option>)}
               </select>
             </div>
-            <div className="col-sm-3">
+            <div className="col-12 col-sm-3 mb-2 mb-sm-0">
               <select className="form-select" name="sortOption" value={sortOption} onChange={this.handleInputChange}>
                 <option value="name-asc">Nama A–Z</option>
                 <option value="name-desc">Nama Z–A</option>
@@ -226,8 +232,8 @@ class Kasir extends Component {
                 <option value="category-desc">Kategori Z–A</option>
               </select>
             </div>
-            <div className="col-sm-2 d-grid">
-              <button className="btn btn-outline-secondary" onClick={() => this.setState({ searchTerm: '', selectedCategory: '', sortOption: 'name-asc' })}>Reset</button>
+            <div className="col-12 col-sm-2 d-grid">
+              <button className="btn btn-outline-secondary w-100" onClick={() => this.setState({ searchTerm: '', selectedCategory: '', sortOption: 'name-asc' })}>Reset</button>
             </div>
           </div>
 
@@ -250,10 +256,11 @@ class Kasir extends Component {
             onDelete={this.handleDeleteItem}
           />
 
-          <div className="d-flex justify-content-between align-items-center mb-0">
-            <button className="btn btn-warning btn-sm" onClick={this.resetAllCheckboxes}>Reset Checkbox</button>
-            <h5>Total: <span className="badge bg-success">{formatRp(this.calculateTotal())}</span></h5>
-            <button className="btn btn-success btn-sm" onClick={this.handleSaveTransaction}>Simpan Transaksi</button>
+          {/* Tombol bawah responsif */}
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-0 gap-2 mt-3">
+            <button className="btn btn-warning btn-sm w-100 w-sm-auto" onClick={this.resetAllCheckboxes}>Reset Checkbox</button>
+            <h5 className="my-2 my-sm-0">Total: <span className="badge bg-success">{formatRp(this.calculateTotal())}</span></h5>
+            <button className="btn btn-success btn-sm w-100 w-sm-auto" onClick={this.handleSaveTransaction}>Simpan Transaksi</button>
           </div>
         </div>
 
